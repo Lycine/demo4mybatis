@@ -23,6 +23,8 @@ dist/
 nbdist/
 .nb-gradle/
 
-mvmw
-mvmw.cmd
+
+/mvmw.cmd
 .mvn
+/mvnw
+/mvnw.cmd
