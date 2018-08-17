@@ -1,12 +1,12 @@
 server:
-  port: 8089
+  port: 41021
 
 spring:
     datasource:
         name: test
-        url: jdbc:mysql://127.0.0.1:3306/jwt
+        url: jdbc:mysql://192.168.1.61:3306/demo?useUnicode=true&amp;characterEncoding=UTF-8
         username: root
-        password: root
+        password: 941021
         # \u4F7F\u7528druid\u6570\u636E\u6E90
         type: com.alibaba.druid.pool.DruidDataSource
         driver-class-name: com.mysql.jdbc.Driver
@@ -33,3 +33,6 @@ pagehelper:
     reasonable: true
     supportMethodsArguments: true
     params: count=countSql
+
+logging:
+  config: classpath:logback.xml
