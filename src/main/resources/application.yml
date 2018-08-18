@@ -18,5 +18,5 @@ logging:
 
 spring:
   profiles:
-    active: 'h2'
-#    active: 'dev'
+#    active: 'h2'
+    active: 'dev'
