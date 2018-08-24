@@ -20,7 +20,7 @@
         <connectionSource class="ch.qos.logback.core.db.DataSourceConnectionSource">
             <dataSource class="org.apache.commons.dbcp.BasicDataSource">
                 <driverClassName>com.mysql.jdbc.Driver</driverClassName>
-                <url>jdbc:mysql://192.168.1.61:3306/demo?useUnicode=true&amp;characterEncoding=UTF-8</url>
+                <url>jdbc:mysql://192.168.1.31:3306/ARTICLE-FETCHER?useUnicode=true&amp;characterEncoding=UTF-8</url>
                 <username>root</username>
                 <password>941021</password>
             </dataSource>

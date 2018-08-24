@@ -2,7 +2,7 @@
 spring:
     datasource:
         name: test
-        url: jdbc:mysql://192.168.1.61:3306/demo?useUnicode=true&amp;characterEncoding=UTF-8
+        url: jdbc:mysql://192.168.1.31:3306/ARTICLE-FETCHER?useUnicode=true&amp;characterEncoding=UTF-8
         username: root
         password: 941021
         # \u4F7F\u7528druid\u6570\u636E\u6E90

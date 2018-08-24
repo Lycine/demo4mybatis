@@ -5,14 +5,14 @@
             location="D:\develop\apache-maven-3.5.0\repo\mysql\mysql-connector-java\5.1.44\mysql-connector-java-5.1.44.jar" />
     <context id="context1" targetRuntime="MyBatis3">
         <jdbcConnection driverClass="com.mysql.jdbc.Driver"
-                        connectionURL="jdbc:mysql://192.168.1.61:3306/demo?useUnicode=true&amp;characterEncoding=UTF-8"
+                        connectionURL="jdbc:mysql://192.168.1.31:3306/ARTICLE-FETCHER?useUnicode=true&amp;characterEncoding=UTF-8"
                         userId="root" password="941021" />
-        <javaModelGenerator targetPackage="org.jozif.demo4mybatis.entity"
+        <javaModelGenerator targetPackage="org.jozif.articleFetcher.entity"
                             targetProject="src\main\java" />
-        <sqlMapGenerator targetPackage="org.jozif.demo4mybatis.dao"
+        <sqlMapGenerator targetPackage="org.jozif.articleFetcher.dao"
                          targetProject="src\main\java" />
-        <javaClientGenerator targetPackage="org.jozif.demo4mybatis.dao"
+        <javaClientGenerator targetPackage="org.jozif.articleFetcher.dao"
                              targetProject="src\main\java" type="XMLMAPPER" />
-        <table schema="CL_DEMO" tableName="user" />
+        <table schema="CL_DEMO" tableName="article" />
     </context>
 </generatorConfiguration>

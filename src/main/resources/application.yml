@@ -4,7 +4,7 @@ server:
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: org.jozif.demo4mybatis.entity
+  type-aliases-package: org.jozif.articleFetcher.entity
 
 #pagehelper\u5206\u9875\u63D2\u4EF6
 pagehelper:
@@ -16,7 +16,21 @@ pagehelper:
 logging:
   config: classpath:logback.xml
 
+#receivers=mouchawei@163.com;petrel2015@foxmail.com
 spring:
   profiles:
 #    active: 'h2'
     active: 'dev'
+  mail:
+    host: smtp.163.com
+    username: 18610280794@163.com
+    password: 8QOIWATI97S66LJD
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+receivers: mouchawei@163.com;petrel2015@foxmail.com

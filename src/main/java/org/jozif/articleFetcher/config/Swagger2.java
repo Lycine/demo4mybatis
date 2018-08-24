@@ -1,4 +1,4 @@
-package org.jozif.demo4mybatis.config;
+package org.jozif.articleFetcher.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
