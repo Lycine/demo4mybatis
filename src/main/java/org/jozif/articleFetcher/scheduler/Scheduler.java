@@ -22,6 +22,15 @@ public class Scheduler {
     @Value("${receivers}")
     private String receivers; //读取配置文件中的参数
 
+    @Value("${isGenerateScreenshot}")
+    private String isGenerateScreenshot;
+
+    @Value("${isGeneratePdf}")
+    private String isGeneratePdf;
+
+    @Value("${isGenerateHtml}")
+    private String isGenerateHtml;
+
     @Autowired
     private ArticleService articleService;
 
@@ -39,7 +48,7 @@ public class Scheduler {
         for (Article article : articleList) {
             if (articleService.findByArticleId(article).size() == 0) {
                 articleService.insertArticle(article);
-                articleService.getArticleDetail(article);
+                articleService.getArticleDetail(article, isGenerateScreenshot, isGeneratePdf, isGenerateHtml);
             }
         }
     }

@@ -34,3 +34,6 @@ spring:
             required: true
 
 receivers: mouchawei@163.com;petrel2015@foxmail.com
+isGenerateScreenshot: false
+isGeneratePdf: false
+isGenerateHtml: false

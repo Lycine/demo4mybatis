@@ -55,17 +55,18 @@ public class ArticleServiceImpl implements ArticleService {
     private static String filenameTemp;
 
     @Override
-    public Article findNewestTucao(){
+    public Article findNewestTucao() {
         ArticleExample articleExample = new ArticleExample();
         ArticleExample.Criteria criteria = articleExample.createCriteria();
         criteria.andArticleNameLike("吐槽");
         List<Article> article1 = articleMapper.selectByExample(articleExample);
-        if (article1.size()>0) {
+        if (article1.size() > 0) {
             return article1.get(0);
         } else {
             return null;
         }
     }
+
     @Override
     public List<Article> findByArticleId(Article article) {
         ArticleExample articleExample = new ArticleExample();
@@ -76,60 +77,88 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public void getArticleDetail(Article article) throws Exception {
-        String url = article.getArticleUrl();
-        Document doc = null;
-        doc = Jsoup.connect(url).get();
-        //提取html body文本内容
-        article.setContent(doc.body().text());
+    public void getArticleDetail(Article article,String isGenerateScreenshot, String isGeneratePdf,String isGenerateHtml) throws Exception {
 
-        String now = new SimpleDateFormat("yyMMddHHmmss").format(new Date());
-        String fileName = article.getPlatform() + "-" + DigestUtils.sha1(doc.html().getBytes()) + "-" + now;
-        createFile(fileName + ".html", doc.html(), false);
-        article.setHtmlPath(filenameTemp);
+            String url = article.getArticleUrl();
+            Document doc = null;
+            doc = Jsoup.connect(url).get();
+            //提取html body文本内容
+            article.setContent(doc.body().text());
+            article.setWordCount(article.getContent().length());
+            String now = new SimpleDateFormat("yyMMddHHmmss").format(new Date());
+            String fileName = article.getPlatform() + "-" + DigestUtils.md5Hex(doc.html()).substring(0, 6) + "-" + now;
+        if (StringUtils.equalsAnyIgnoreCase(isGenerateHtml,"yes","true","1")){
+            createFile(fileName + ".html", doc.html(), false);
+            article.setHtmlPath(filenameTemp);
+        } else {
+            log.info("配置文件中选择不生成html");
+        }
 
-
+        int pageSize = 1;
+        float pageHeight = 450;
         //生成去掉无用内容的html
+
         doc.select("body > div.main-wrap.content-wrap > div.qr").remove();
         doc.select("body > div.global-header").remove();
         createFile("tempToGenPdfOrImg.html", doc.html().replace("href=\"/", "href=\"http://static.daily.zhihu.com/").replace("src=\"/", "src=\"http://static.daily.zhihu.com/"), true);
 
-        //生成pdf
-        String genPdfFileName = fileName + ".pdf";
-        int pageSize = 1;
-        float pageHeight = 450;
-        String[] cmdGenPdf = new String[]{"chromium-browser", "--headless", " --disable-gpu", "--print-to-pdf=" + genPdfFileName, "tempToGenPdfOrImg.html"};
-        if (!runCmd(cmdGenPdf)) {
-            log.info("生成pdf失败");
-            articleMapper.updateByPrimaryKey(article);
-            log.info("更新记录: " + article.toString());
-            throw new Exception("生成pdf失败");
-        }
+        if (StringUtils.equalsAnyIgnoreCase(isGeneratePdf,"yes","true","1")){
+            //生成pdf
+            String genPdfFileName = fileName + ".pdf";
 
-        log.info("生成pdf成功");
-        article.setPdfPath(genPdfFileName);
+            String[] cmdGenPdf = new String[]{"google-chrome-stable", "--headless", " --disable-gpu", "--print-to-pdf=" + genPdfFileName, "tempToGenPdfOrImg.html"};
+            if (!runCmd(cmdGenPdf)) {
+                log.info("生成pdf失败");
+                ArticleExample articleExample = new ArticleExample();
+                ArticleExample.Criteria criteria = articleExample.createCriteria();
+                criteria.andArticleIdEqualTo(article.getArticleId());
+                articleMapper.updateByExampleSelective(article,articleExample);
+                log.info("更新记录: " + article.toString());
+                throw new Exception("生成pdf失败");
+            }
 
-        //获取pdf页数,高度，计算图片高度
-        PdfReader reader;
-        reader = new PdfReader(genPdfFileName);
-        pageSize = reader.getNumberOfPages(); //页码
+            log.info("生成pdf成功");
+            article.setPdfPath(genPdfFileName);
+
+            //获取pdf页数,高度，计算图片高度
+            PdfReader reader;
+            reader = new PdfReader(genPdfFileName);
+            pageSize = reader.getNumberOfPages(); //页码
 //        pageHeight = reader.getPageSize(1).getHeight(); //每页高度
-        reader.close();
-
-        //生成img
-        String genImgFileName = fileName + ".png";
-        String[] cmdGenImg = new String[]{"chromium-browser", "--headless", " --disable-gpu", "--screenshot=" + genImgFileName, "--window-size=600," + pageSize * 1000 + "", "tempToGenPdfOrImg.html"};
-
-        if (!runCmd(cmdGenImg)) {
-            log.info("生成img失败");
-            articleMapper.updateByPrimaryKey(article);
-            log.info("更新记录: " + article.toString());
-            throw new Exception("生成img失败");
+            reader.close();
+        } else {
+            log.info("配置文件中选择不生成pdf");
         }
-        log.info("生成img成功");
-        article.setScreenshotPath(genImgFileName);
 
-        articleMapper.updateByPrimaryKey(article);
+        if (StringUtils.equalsAnyIgnoreCase(isGenerateScreenshot,"yes","true","1")){
+
+            //生成img
+            String genImgFileName = fileName + ".png";
+//        google-chrome-stable
+//        google-chrome-stable
+//        String[] cmdGenImg = new String[]{"google-chrome-stable", "--headless", " --disable-gpu", "--screenshot=" + genImgFileName, "--window-size=600," + pageSize * 1000 + "", "tempToGenPdfOrImg.html"};
+            String[] cmdGenImg = new String[]{"google-chrome-stable", "--headless", " --disable-gpu", "--screenshot=" + genImgFileName, "--window-size=1920,1680", "tempToGenPdfOrImg.html"};
+
+            if (!runCmd(cmdGenImg)) {
+                log.info("生成img失败");
+                ArticleExample articleExample = new ArticleExample();
+                ArticleExample.Criteria criteria = articleExample.createCriteria();
+                criteria.andArticleIdEqualTo(article.getArticleId());
+                articleMapper.updateByExampleSelective(article,articleExample);
+                log.info("更新记录: " + article.toString());
+                throw new Exception("生成img失败");
+            }
+            log.info("生成img成功");
+            article.setScreenshotPath(genImgFileName);
+        } else {
+            log.info("配置文件中选择不生成img");
+        }
+
+
+        ArticleExample articleExample = new ArticleExample();
+        ArticleExample.Criteria criteria = articleExample.createCriteria();
+        criteria.andArticleIdEqualTo(article.getArticleId());
+        articleMapper.updateByExampleSelective(article,articleExample);
         log.info("更新记录: " + article.toString());
     }
 
