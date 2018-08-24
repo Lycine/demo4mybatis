@@ -44,33 +44,40 @@ public class Scheduler {
 //    @Scheduled(cron = "0 0 0/1 * * ? ")
     @Scheduled(cron = "0  0/1 * * * ? ")
     public void timerToNow() throws Exception {
+        log.info("开始抓取文章");
         List<Article> articleList = articleService.getHomePageOfDailyZhihuStoryList();
         for (Article article : articleList) {
             if (articleService.findByArticleId(article).size() == 0) {
+                log.info("该文章不存在，正在抓取，articleId: " + article.getArticleId());
                 articleService.insertArticle(article);
                 articleService.getArticleDetail(article, isGenerateScreenshot, isGeneratePdf, isGenerateHtml);
+            } else {
+                log.info("该文章已存在");
             }
         }
+        log.info("抓取文章结束");
     }
 
 
-    @Scheduled(cron = "0 10 7 * * ? ")
-    public void sendMail() throws Exception {
-        Article article = articleService.findNewestTucao();
+//    @Scheduled(cron = "0 10 7 * * ? ")
+//    public void sendMail() throws Exception {
+//        Article article = articleService.findNewestTucao();
+//
+//        MimeMessage mimeMessage = mailSender.createMimeMessage();
+//        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
+//        //基本设置.
+//        helper.setFrom("412887952@qq.com");//发送者.
+//        helper.setTo("1473773560@qq.com");//接收者.
+//        helper.setSubject("测试静态资源（邮件主题）");//邮件主题.
+//        // 邮件内容，第二个参数指定发送的是HTML格式
+//        //说明：嵌入图片<img src='cid:head'/>，其中cid:是固定的写法，而aaa是一个contentId。
+//        helper.setText("<body>这是图片：<img src='cid:head' /></body>", true);
+//        FileSystemResource file = new FileSystemResource(new File(article.getScreenshotPath()));
+//        helper.addInline("head",file);
+//        mailSender.send(mimeMessage);
+//    }
 
-        MimeMessage mimeMessage = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
-        //基本设置.
-        helper.setFrom("412887952@qq.com");//发送者.
-        helper.setTo("1473773560@qq.com");//接收者.
-        helper.setSubject("测试静态资源（邮件主题）");//邮件主题.
-        // 邮件内容，第二个参数指定发送的是HTML格式
-        //说明：嵌入图片<img src='cid:head'/>，其中cid:是固定的写法，而aaa是一个contentId。
-        helper.setText("<body>这是图片：<img src='cid:head' /></body>", true);
-        FileSystemResource file = new FileSystemResource(new File(article.getScreenshotPath()));
-        helper.addInline("head",file);
-        mailSender.send(mimeMessage);
-    }
+
 //
 //        String content = util.getPassageHtml();
 //
