@@ -40,10 +40,14 @@ public class ArticleServiceImpl implements ArticleService {
     private JavaMailSender mailSender;
 
     @Value("${spring.mail.username}")
-    private String Sender; //读取配置文件中的参数
+    private String sender; //读取配置文件中的参数
 
     @Override
     public Article insertArticle(Article article) throws IOException {
+        if (null == article.getGmtReal()) {
+            article.setGmtReal(new Date());
+        }
+        article.setGmtCreate(new Date());
         articleMapper.insert(article);
         return article;
     }
@@ -57,12 +61,15 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public Article findNewestTucao() {
         ArticleExample articleExample = new ArticleExample();
+        articleExample.setOrderByClause("id DESC");
         ArticleExample.Criteria criteria = articleExample.createCriteria();
-        criteria.andArticleNameLike("吐槽");
+        criteria.andArticleNameLike("%瞎扯%");
         List<Article> article1 = articleMapper.selectByExample(articleExample);
         if (article1.size() > 0) {
+            log.info("找到最新的瞎扯！: " + article1.get(0).toString());
             return article1.get(0);
         } else {
+            log.info("未找到最新的瞎扯！");
             return null;
         }
     }
@@ -77,17 +84,17 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public void getArticleDetail(Article article,String isGenerateScreenshot, String isGeneratePdf,String isGenerateHtml) throws Exception {
+    public void getArticleDetail(Article article, String isGenerateScreenshot, String isGeneratePdf, String isGenerateHtml) throws Exception {
 
-            String url = article.getArticleUrl();
-            Document doc = null;
-            doc = Jsoup.connect(url).get();
-            //提取html body文本内容
-            article.setContent(doc.body().text());
-            article.setWordCount(article.getContent().length());
-            String now = new SimpleDateFormat("yyMMddHHmmss").format(new Date());
-            String fileName = article.getPlatform() + "-" + DigestUtils.md5Hex(doc.html()).substring(0, 6) + "-" + now;
-        if (StringUtils.equalsAnyIgnoreCase(isGenerateHtml,"yes","true","1")){
+        String url = article.getArticleUrl();
+        Document doc = null;
+        doc = Jsoup.connect(url).get();
+        //提取html body文本内容
+        article.setContent(doc.body().text());
+        article.setWordCount(article.getContent().length());
+        String now = new SimpleDateFormat("yyMMddHHmmss").format(new Date());
+        String fileName = article.getPlatform() + "-" + DigestUtils.md5Hex(doc.html()).substring(0, 6) + "-" + now;
+        if (StringUtils.equalsAnyIgnoreCase(isGenerateHtml, "yes", "true", "1")) {
             createFile(fileName + ".html", doc.html(), false);
             article.setHtmlPath(filenameTemp);
         } else {
@@ -102,17 +109,17 @@ public class ArticleServiceImpl implements ArticleService {
         doc.select("body > div.global-header").remove();
         createFile("tempToGenPdfOrImg.html", doc.html().replace("href=\"/", "href=\"http://static.daily.zhihu.com/").replace("src=\"/", "src=\"http://static.daily.zhihu.com/"), true);
 
-        if (StringUtils.equalsAnyIgnoreCase(isGeneratePdf,"yes","true","1")){
+        if (StringUtils.equalsAnyIgnoreCase(isGeneratePdf, "yes", "true", "1")) {
             //生成pdf
             String genPdfFileName = fileName + ".pdf";
 
-            String[] cmdGenPdf = new String[]{"google-chrome-stable", "--headless", " --disable-gpu", "--print-to-pdf=" + genPdfFileName, "tempToGenPdfOrImg.html"};
+            String[] cmdGenPdf = new String[]{"chromium-browser", "--headless", " --disable-gpu", "--print-to-pdf=" + genPdfFileName, "tempToGenPdfOrImg.html"};
             if (!runCmd(cmdGenPdf)) {
                 log.info("生成pdf失败");
                 ArticleExample articleExample = new ArticleExample();
                 ArticleExample.Criteria criteria = articleExample.createCriteria();
                 criteria.andArticleIdEqualTo(article.getArticleId());
-                articleMapper.updateByExampleSelective(article,articleExample);
+                articleMapper.updateByExampleSelective(article, articleExample);
                 log.info("更新记录: " + article.toString());
                 throw new Exception("生成pdf失败");
             }
@@ -130,21 +137,22 @@ public class ArticleServiceImpl implements ArticleService {
             log.info("配置文件中选择不生成pdf");
         }
 
-        if (StringUtils.equalsAnyIgnoreCase(isGenerateScreenshot,"yes","true","1")){
+        if (StringUtils.equalsAnyIgnoreCase(isGenerateScreenshot, "yes", "true", "1")) {
 
             //生成img
             String genImgFileName = fileName + ".png";
-//        google-chrome-stable
-//        google-chrome-stable
-//        String[] cmdGenImg = new String[]{"google-chrome-stable", "--headless", " --disable-gpu", "--screenshot=" + genImgFileName, "--window-size=600," + pageSize * 1000 + "", "tempToGenPdfOrImg.html"};
-            String[] cmdGenImg = new String[]{"google-chrome-stable", "--headless", " --disable-gpu", "--screenshot=" + genImgFileName, "--window-size=1920,1680", "tempToGenPdfOrImg.html"};
+
+            //瞎扯的尺寸
+            String[] cmdGenImg = new String[]{"chromium-browser", "--headless", " --disable-gpu", "--screenshot=" + genImgFileName, "--window-size=600," + pageSize * 1000 + "", "tempToGenPdfOrImg.html"};
+
+//          String[] cmdGenImg = new String[]{"chromium-browser", "--headless", " --disable-gpu", "--screenshot=" + genImgFileName, "--window-size=1920,1680", "tempToGenPdfOrImg.html"};
 
             if (!runCmd(cmdGenImg)) {
                 log.info("生成img失败");
                 ArticleExample articleExample = new ArticleExample();
                 ArticleExample.Criteria criteria = articleExample.createCriteria();
                 criteria.andArticleIdEqualTo(article.getArticleId());
-                articleMapper.updateByExampleSelective(article,articleExample);
+                articleMapper.updateByExampleSelective(article, articleExample);
                 log.info("更新记录: " + article.toString());
                 throw new Exception("生成img失败");
             }
@@ -158,7 +166,7 @@ public class ArticleServiceImpl implements ArticleService {
         ArticleExample articleExample = new ArticleExample();
         ArticleExample.Criteria criteria = articleExample.createCriteria();
         criteria.andArticleIdEqualTo(article.getArticleId());
-        articleMapper.updateByExampleSelective(article,articleExample);
+        articleMapper.updateByExampleSelective(article, articleExample);
         log.info("更新记录: " + article.toString());
     }
 
@@ -341,7 +349,7 @@ public class ArticleServiceImpl implements ArticleService {
         try {
             message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            helper.setFrom(Sender);
+            helper.setFrom(sender);
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(content, true);

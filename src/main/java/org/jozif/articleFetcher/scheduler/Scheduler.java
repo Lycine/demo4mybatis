@@ -11,10 +11,16 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
+import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Component
@@ -37,12 +43,14 @@ public class Scheduler {
     @Autowired
     private JavaMailSender mailSender;
 
+    @Value("${spring.mail.username}")
+    private String sender; //读取配置文件中的参数
 
-
-    //    @Scheduled(cron = "0 10 7 * * ? ")
+    //        @Scheduled(cron = "0 10 7 * * ? ")
 //    @Scheduled(cron = "0 0 0/3 * * ? ")
 //    @Scheduled(cron = "0 0 0/1 * * ? ")
-    @Scheduled(cron = "0  0/1 * * * ? ")
+//    @Scheduled(cron = "0  2/5 * * * ? ")
+    @Scheduled(cron = "0  3/20 * * * ?")
     public void timerToNow() throws Exception {
         log.info("开始抓取文章");
         List<Article> articleList = articleService.getHomePageOfDailyZhihuStoryList();
@@ -58,42 +66,49 @@ public class Scheduler {
         log.info("抓取文章结束");
     }
 
+    @Scheduled(cron = "0 10 7 * * ? ")
+    public void sendTucaoMail() throws Exception {
+        Article article = articleService.findNewestTucao();
+        if (null == article) {
+            log.warn("未找到最新的瞎扯,不发送邮件");
+            return;
+        }
+        log.info("article1: " + article.toString());
+        articleService.getArticleDetail(article, "true", isGeneratePdf, isGenerateHtml);
+        article = articleService.findNewestTucao();
+        if (null == article) {
+            log.warn("未找到最新的瞎扯,不发送邮件");
+            return;
+        }
+        log.info("article2: " + article.toString());
+        Set<String> receiversMail = new HashSet();
+        for (String receiverMail : StringUtils.split(receivers, ";")) {
+            if (!StringUtils.isEmpty(receiverMail)) {
+                receiversMail.add(receiverMail);
+            }
+        }
 
-//    @Scheduled(cron = "0 10 7 * * ? ")
-//    public void sendMail() throws Exception {
-//        Article article = articleService.findNewestTucao();
-//
-//        MimeMessage mimeMessage = mailSender.createMimeMessage();
-//        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
-//        //基本设置.
-//        helper.setFrom("412887952@qq.com");//发送者.
-//        helper.setTo("1473773560@qq.com");//接收者.
-//        helper.setSubject("测试静态资源（邮件主题）");//邮件主题.
-//        // 邮件内容，第二个参数指定发送的是HTML格式
-//        //说明：嵌入图片<img src='cid:head'/>，其中cid:是固定的写法，而aaa是一个contentId。
-//        helper.setText("<body>这是图片：<img src='cid:head' /></body>", true);
-//        FileSystemResource file = new FileSystemResource(new File(article.getScreenshotPath()));
-//        helper.addInline("head",file);
-//        mailSender.send(mimeMessage);
-//    }
+        for (String receiver : receiversMail) {
+            String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+            sendArticleMail(receiver, "瞎扯|" + time, article);
+            log.info("success, send to receiver: " + receiver + ", time: " + time + ", articleId" + article.getArticleId());
+        }
+        log.info("all success!");
+    }
 
+    private void sendArticleMail(String to, String subject, Article article) throws MessagingException {
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
+        //基本设置.
+        helper.setFrom(sender);
+        helper.setTo(to);
+        helper.setSubject(subject);
+        helper.setText("<body><img src='cid:head' />原文链接" + article.getArticleUrl() + "</body>", true);
+        // 邮件内容，第二个参数指定发送的是HTML格式
+        //说明：嵌入图片<img src='cid:head'/>，其中cid:是固定的写法，而aaa是一个contentId。
 
-//
-//        String content = util.getPassageHtml();
-//
-//        Set<String> receiversMail = new HashSet();
-//        for (String receiverMail : StringUtils.split(receivers, ";")) {
-//            if (!StringUtils.isEmpty(receiverMail)) {
-//                receiversMail.add(receiverMail);
-//            }
-//        }
-//
-//
-//        for (String receiver : receiversMail) {
-//            String time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-//            util.sendMail(receiver, "瞎扯|" + time, content);
-//            log.info("success, send to receiver: " + receiver + ", time: " + time + ", content: " + content);
-//        }
-//        log.info("all success!");
-
+        FileSystemResource file = new FileSystemResource(new File(article.getScreenshotPath()));
+        helper.addInline("head", file);
+        mailSender.send(mimeMessage);
+    }
 }

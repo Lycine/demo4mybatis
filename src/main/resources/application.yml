@@ -33,7 +33,8 @@ spring:
             enable: true
             required: true
 
-receivers: mouchawei@163.com;petrel2015@foxmail.com
+receivers: petrel2015@foxmail.com;mouchawei@163.com
+
 isGenerateScreenshot: false
 isGeneratePdf: false
 isGenerateHtml: false
