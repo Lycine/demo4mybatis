@@ -15,7 +15,9 @@ public interface ArticleService {
 
     List<Article> findByArticleId(Article article);
 
-    void getArticleDetail(Article article,String isGenerateScreenshot, String isGeneratePdf,String isGenerateHtml) throws Exception;
+    void getArticleDetailForTucao(Article article) throws Exception;
+
+    void getArticleDetail(Article article, String isGenerateScreenshot, String isGeneratePdf, String isGenerateHtml) throws Exception;
 
     List<Article> getHomePageOfDailyZhihuStoryList() throws IOException;
 }

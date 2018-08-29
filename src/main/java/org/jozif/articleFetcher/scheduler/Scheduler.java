@@ -74,7 +74,7 @@ public class Scheduler {
             return;
         }
         log.info("article1: " + article.toString());
-        articleService.getArticleDetail(article, "true", isGeneratePdf, isGenerateHtml);
+        articleService.getArticleDetailForTucao(article);
         article = articleService.findNewestTucao();
         if (null == article) {
             log.warn("未找到最新的瞎扯,不发送邮件");
@@ -103,7 +103,7 @@ public class Scheduler {
         helper.setFrom(sender);
         helper.setTo(to);
         helper.setSubject(subject);
-        helper.setText("<body><img src='cid:head' />原文链接" + article.getArticleUrl() + "</body>", true);
+        helper.setText("<body><img src='cid:head' />原文链接: " + article.getArticleUrl() + "</body>", true);
         // 邮件内容，第二个参数指定发送的是HTML格式
         //说明：嵌入图片<img src='cid:head'/>，其中cid:是固定的写法，而aaa是一个contentId。
 
